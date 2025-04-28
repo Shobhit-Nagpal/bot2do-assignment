@@ -1,0 +1,78 @@
+services:
+  api:
+    container_name: api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    env_file:
+      - path: ./api/.env
+        required: true
+    ports:
+      - 3000:3000
+    depends_on:
+      db:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+      redis:
+        condition: service_started
+  
+  web:
+    container_name: web
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+  
+  db:
+    image: mongo:8.0
+    container_name: bot2do-db
+    restart: always
+    ports:
+      - 27017:27017
+    command: "mongod --replSet rs0 --bind_ip_all"
+    healthcheck:
+      test: |
+        echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'bot2do-db:27017'}]}) }" | mongosh --quiet
+      interval: 5s
+      timeout: 30s
+      start_period: 10s
+      retries: 30
+    volumes:
+      - mongo_data:/data/db
+  
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - 1025:1025  # SMTP server
+      - 8025:8025  # Web interface
+    environment:
+      MH_STORAGE: maildir
+      MH_MAILDIR_PATH: /tmp
+    volumes:
+      - mailhog_data:/tmp
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      start_period: 10s
+      retries: 30
+
+volumes:
+  mongo_data:
+    driver: local
+  mailhog_data:
+    driver: local
+  redis_data:
+    driver: local

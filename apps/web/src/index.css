@@ -6,6 +6,7 @@
 
 @theme {
   --font-inter: Inter, sans-serif;
+  --color-primary-blue: #3B82F6;
 }
 
 :root {
