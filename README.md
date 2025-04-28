@@ -38,7 +38,7 @@ This repo is an assignment for Bot2Do.
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository-url>
+git clone git@github.com:Shobhit-Nagpal/bot2do-assignment.git
 cd bot2do-assignment
 ```
 
